@@ -1,0 +1,21 @@
+{
+  "name": "emhackithon-tearoom",
+  "version": "0.0.1",
+  "description": "Chatbot.",
+  "engines": {
+    "node": "~6.0.0"
+  },
+  "scripts": {
+    "start": "node src",
+    "watch": "nodemon -L --exec npm run start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aborsu/Emhackinathon-teaRoom"
+  },
+  "author": "Oskar, Jonathan and Gus",
+  "bugs": {
+    "url": "https://github.com/aborsu/Emhackinathon-teaRoom/issues"
+  },
+  "homepage": "https://github.com/aborsu/Emhackinathon-teaRoom"
+}
