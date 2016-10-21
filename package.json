@@ -22,5 +22,8 @@
     "bluebird": "^3.4.6",
     "botbuilder": "^3.3.3",
     "restify": "^4.1.1"
+  },
+  "devDependencies": {
+    "nodemon": "^1.11.0"
   }
 }
