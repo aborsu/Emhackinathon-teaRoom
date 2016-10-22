@@ -2,10 +2,10 @@ const path = require('path');
 
 module.exports = {
   db: {
-    user: 'eliza',
-    password: 'isSoPretty',
-    db: 'emhackinathon',
-    path: path.join(process.cwd(), 'sqlite_db.sqlite')
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    db: process.env.DB_DATABASE,
+    host: process.env.DB_HOST
   },
   fatsecret: {
    consumerKey: process.env.FS_CONSUMER_KEY,
@@ -13,6 +13,6 @@ module.exports = {
   },
   luis: {
    applicationID: process.env.LUIS_APPLICATION_ID,
-   subscriptionKey: process.env.SUBSCRIPTION_KEY
+   subscriptionKey: process.env.LUIS_SUBSCRIPTION_KEY
   }
 };

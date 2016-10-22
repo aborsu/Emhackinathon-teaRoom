@@ -24,8 +24,10 @@
     "config": "^1.21.0",
     "crypto": "^0.0.3",
     "lodash": "^4.16.4",
-    "restler": "^3.4.0",
+    "mysql": "^2.11.1",
+    "mysql2": "^1.1.1",
     "restify": "^4.1.1",
+    "restler": "^3.4.0",
     "sequelize": "^3.24.5",
     "sqlite3": "^3.1.6"
   },
