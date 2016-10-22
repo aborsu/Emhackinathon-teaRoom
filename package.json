@@ -23,6 +23,7 @@
     "botbuilder": "^3.3.3",
     "config": "^1.21.0",
     "crypto": "^0.0.3",
+    "lodash": "^4.16.4",
     "restler": "^3.4.0",
     "restify": "^4.1.1",
     "sequelize": "^3.24.5",

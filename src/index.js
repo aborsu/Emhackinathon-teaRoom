@@ -1,5 +1,6 @@
 var restify = require('restify');
 var builder = require('botbuilder');
+var _ = require('lodash') 
 const models = require('./models')
 
 const loadDatabase = () => {
