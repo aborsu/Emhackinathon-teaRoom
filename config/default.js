@@ -10,5 +10,9 @@ module.exports = {
   fatsecret: {
    consumerKey: process.env.FS_CONSUMER_KEY,
    sharedKey: process.env.FS_SHARED_KEY
+  },
+  luis: {
+   applicationID: process.env.LUIS_APPLICATION_ID,
+   subscriptionKey: process.env.SUBSCRIPTION_KEY
   }
 };

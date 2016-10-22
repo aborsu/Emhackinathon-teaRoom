@@ -1,7 +1,11 @@
-var restify = require('restify');
-var builder = require('botbuilder');
-var _ = require('lodash') 
+const _ = require('lodash')
+const BPromise = require('bluebird');
+const builder = require('botbuilder');
+const config = require('config')
+const fatsecret = require('./controllers/fatsecret')
 const models = require('./models')
+const restify = require('restify');
+const userInfoDialogue = require('./dialogue/user-info')
 
 const loadDatabase = () => {
   console.log('DATABASE_LOADING');
@@ -45,20 +49,28 @@ loadDatabase().then(() => {
   console.log('Server is listenning on route /api/messages');
 })
 
+var model = 'https://api.projectoxford.ai/luis/v1/application?' +
+  `id=${config.luis.applicationID}&subscription=${config.luis.subscriptionKey}`;
+console.log(model);
+var recognizer = new builder.LuisRecognizer(model);
+
+var dialog = new builder.IntentDialog({ recognizers: [recognizer] });
+bot.dialog('/', dialog);
+
 //=========================================================
 // Bots Dialogs
 //=========================================================
 
-bot.dialog('/', [
-    function (session) {
-        // ORIGINAL - session.beginDialog('/user', session.userData.profile);
-	session.beginDialog('/connection', session.userData.connectionProfile);
-    },
-    function (session, results, next) {
-      session.send('You are logged as %s', results.firstName);
-      session.send('So? What next?');
-    }
-]);
+// bot.dialog('/', [
+//     function (session) {
+//         // ORIGINAL - session.beginDialog('/user', session.userData.profile);
+// 	session.beginDialog('/connection', session.userData.connectionProfile);
+//     },
+//     function (session, results, next) {
+//       session.send('You are logged as %s', results.firstName);
+//       session.send('So? What next?');
+//     }
+// ]);
 
 //=========================================================
 // CONNECTION BOT
@@ -180,3 +192,71 @@ bot.dialog('/user', [
     session.endDialogWithResult({response: results})
   }
 ]);
+
+// Add intent handlers
+
+dialog.matches('CheckCalories', builder.DialogAction.send('You want to get your calories for the day.'));
+dialog.onDefault(builder.DialogAction.send("Could you please rephrase what you just said?"));
+
+
+//intent handler for adding foods.
+dialog.matches('AddFoods', [
+    function (session, args, next) {
+        // console.log(JSON.stringify(args));
+        // console.log(_.filter(args.compositeEntities, entity=>true))
+       var foods = _.filter(args.entities, entity => entity.type === 'Food');
+       console.log(foods)
+       if(foods.length==0)
+       {
+         session.send('Sorry, I could not determine which foods you just ate.');
+       }
+
+       BPromise.mapSeries(foods, food => {
+         fatsecret.food.search(food.entity)
+           .then( foodItems => {
+             //  session.send(JSON.stringify(foodItems))
+             if(foodItems.foods !== undefined)
+             {
+               session.send(foodItems.foods.food[0].food_name);
+               session.send(foodItems.foods.food[0].food_description);
+               session.send(JSON.stringify(foodItems.foods.food[0]));
+               //"Per 972g - Calories: 1225kcal | Fat: 33.44g | Carbs: 3.21g | Protein: 213.27g"
+               //we need to extract the calories from the description string
+               var foodCalories = parseInt(foodItems.foods.food[0].food_description.split('-')[1].split('|')[0].split(':')[1].replace("kcal",' '),10);
+
+             }
+             else
+             {
+               session.send("Sorry I could not find any food with that name.");
+             }
+
+           })
+            //process each food with the api.
+            //session.send('That sounds delicious!');
+            //check how he's doing with the calories
+            //session.send('Your food journal has been updated, keep up the good work!');
+       })
+    }
+    ]);
+
+    //intent handler for adding foods.
+dialog.matches('CouldIEat', [
+    function (session, args, next) {
+        console.log(JSON.stringify(args))
+
+        // console.log(_.filter(args.entities, entity => entity.type === 'Food'))
+       var foods = _.filter(args.entities, entity => entity.parentType === 'CompositeFood');
+       if(foods.length==0)
+       {
+         session.send('Sorry, I could not determine which foods you just ate.');
+       }
+       session.send(foods.length);
+       foods.forEach(function(i)
+        {
+            //process each food with the api.
+            //session.send('That sounds delicious!');
+            //check how he's doing with the calories
+            //session.send('Your food journal has been updated, keep up the good work!');
+        });
+    }
+    ]);
