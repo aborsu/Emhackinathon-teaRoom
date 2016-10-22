@@ -21,7 +21,10 @@
   "dependencies": {
     "bluebird": "^3.4.6",
     "botbuilder": "^3.3.3",
-    "restify": "^4.1.1"
+    "config": "^1.21.0",
+    "restify": "^4.1.1",
+    "sequelize": "^3.24.5",
+    "sqlite3": "^3.1.6"
   },
   "devDependencies": {
     "nodemon": "^1.11.0"
