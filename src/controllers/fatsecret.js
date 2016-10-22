@@ -32,7 +32,7 @@ const getOAuthSignature = (request, access_token='') =>
 // construct a param=value& string and uriEncode
 const buildSigBaseStr = request => {
   const keys = Object.keys(request).sort()
-  const parameterString = _.map(keys, key => key + '=' + request[key]).join('&')
+  const parameterString = _.map(keys, key => key + '=' + encodeURIComponent(request[key])).join('&')
   return `POST&${encodedFSUrl}&${encodeURIComponent(parameterString)}`;
 }
 
@@ -67,4 +67,4 @@ const fatsecret = {
 module.exports = fatsecret;
 
 // example
-// fatsecret.food.search('hamburger')
+// fatsecret.food.search('hot dog')
