@@ -6,6 +6,8 @@ const fatsecret = require('./controllers/fatsecret')
 const models = require('./models')
 const restify = require('restify');
 const userInfoDialogue = require('./dialogue/user-info')
+const meaningOfLife = require('./controllers/meaningOfLife');
+const eliza = require('./controllers/eliza');
 
 const loadDatabase = () => {
   console.log('DATABASE_LOADING');
@@ -35,6 +37,21 @@ var connector = new builder.ChatConnector({
     appPassword: process.env.MICROSOFT_APP_PASSWORD
 });
 var bot = new builder.UniversalBot(connector);
+
+// Create prompts
+eliza.create(bot);
+bot.beginDialogAction('eliza', '/eliza', { matches: /^eliza/i });
+// dialog.matches('TalkToEliza',[
+//   (session) => {
+//     session.beginDialog('/eliza');
+//   }]);
+
+meaningOfLife.create(bot);
+bot.beginDialogAction('Mounty Python', '/meaningOfLife', { matches: /^mounty python/i });
+// dialog.matches('AfricanOrEuropeanSwallow',[
+//   (session) => {
+//     session.beginDialog('/meaningOfLife');
+//   }]);
 
 loadDatabase().then(() => {
   server.post('/api/messages', connector.listen());
@@ -179,4 +196,4 @@ dialog.matches('CouldIEat', [
 
 // // TAKING USER INFORMATION BOT
 // //=========================================================
-  bot.dialog('/user', userInfoDialogue);
+bot.dialog('/user', userInfoDialogue);
