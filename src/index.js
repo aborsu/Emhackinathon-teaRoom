@@ -42,7 +42,7 @@ loadDatabase().then(() => {
 })
 
 var model = 'https://api.projectoxford.ai/luis/v1/application?' +
-  `id=${config.luis.applicationID}&subscription=${config.luis.subscriptionKey}`;
+  `id=${config.luis.applicationID}&subscription-key=${config.luis.subscriptionKey}`;
 console.log(model);
 var recognizer = new builder.LuisRecognizer(model);
 
