@@ -13,8 +13,8 @@ const sequelize = new Sequelize(
   config.db.user,
   config.db.password,
   {
-    storage: config.db.path,
-    dialect: 'sqlite'
+    host: config.db.host,
+    dialect: 'mysql'
   }
 );
 
