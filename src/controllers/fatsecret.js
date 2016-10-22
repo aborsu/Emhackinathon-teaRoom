@@ -52,7 +52,6 @@ const foodSearch = (expression) => new BPromise(resolve => {
   rest.post(fatSecretRestUrl, {
     data: reqObj,
   }).on('complete', (data, response) => {
-    console.log(response)
     resolve(data);
   });
 });
