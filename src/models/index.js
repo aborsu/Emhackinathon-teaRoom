@@ -36,6 +36,5 @@ Object.keys(models).forEach(modelName => {
 
 models.sequelize = sequelize;
 models.Sequelize = Sequelize;
-models.user.hasMany(models.food)
 
 module.exports = models;

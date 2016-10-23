@@ -6,20 +6,18 @@ const fatsecret = require('./controllers/fatsecret')
 const models = require('./models')
 const restify = require('restify');
 const userInfoDialogue = require('./dialogue/user-info')
+const getId = require('./dialogue/getId')
+const postFood = require('./dialogue/postFood')
 const meaningOfLife = require('./controllers/meaningOfLife');
 const eliza = require('./controllers/eliza');
 
-const loadDatabase = () => {
-  console.log('DATABASE_LOADING');
-
-  return models.sequelize.sync()
-    .then(() => {
-      console.log('DATABASE_LOADING_SUCCESS');
-    }).catch(err => {
-      console.log('DATABASE_LOADING_FAIL', err);
-      process.exit(-1);
-    });
-};
+models.sequelize.sync()
+  .then(() => console.log('DATABASE_SYNCED'))
+  .catch(err => {
+    console.log('Could not sync with database')
+    console.log(err)
+    process.exit(-1)
+  })
 
 //=========================================================
 // Bot Setup
@@ -45,10 +43,7 @@ bot.beginDialogAction('eliza', '/eliza', { matches: /^eliza/i });
 meaningOfLife.create(bot);
 bot.beginDialogAction('Mounty Python', '/meaningOfLife', { matches: /^mounty python/i });
 
-loadDatabase().then(() => {
-  server.post('/api/messages', connector.listen());
-  console.log('Server is listenning on route /api/messages');
-})
+server.post('/api/messages', connector.listen());
 
 var model = 'https://api.projectoxford.ai/luis/v1/application?' +
   `id=${config.luis.applicationID}&subscription-key=${config.luis.subscriptionKey}`;
@@ -71,74 +66,21 @@ dialog.matches('AfricanOrEuropeanSwallow',[
 //=========================================================
 // CONNECTION BOT
 //=========================================================
+dialog.onDefault(builder.DialogAction.send("Could you please rephrase what you just said?"));
+
+bot.dialog('/user', userInfoDialogue);
+bot.dialog('/getId', getId);
+bot.dialog('/postFood', postFood);
+
 dialog.matches('Greetings','/getId');
+dialog.matches('AddFoods', '/postFood');
 
 //=========================================================
 // Add intent handlers
 
-dialog.onDefault(builder.DialogAction.send("Could you please rephrase what you just said?"));
 
 
 //intent handler for adding foods.
-dialog.matches('AddFoods', [
-    function (session, args, next) {
-      session.dialogData.foods = args;
-
-      if (session.userData.user === undefined)
-      {
-        session.dialogData.createUser = true;
-        session.beginDialog('/greetings', { customPrompt: "Wow hold it! I dont know you, please tell me your name."});
-        //break
-      }
-      else {
-
-        session.dialogData.createUser = false;
-        next();
-      }
-    },
-    function (session, args, next) {
-      var entities =args.entities;
-      if (session.dialogData.createUser) {
-        session.send("Now that this is out of the way, let's look at what you ate.")
-        entities = session.dialogData.foods.entities;
-      }
-
-      // console.log(JSON.stringify(args));
-      // console.log(_.filter(args.compositeEntities, entity=>true))
-      var foods = _.filter(session.dialogData.foods.entities, entity => entity.type === 'Food');
-      var foundFood = false;
-      BPromise.all(
-        BPromise.mapSeries(foods, food => {
-          return fatsecret.food.search(food.entity)
-            .then( foodItems => {
-              //  session.send(JSON.stringify(foodItems))
-              if(foodItems.foods !== undefined && foodItems.foods.food !== undefined)
-              {
-                foundFood=true;
-
-                session.send(foodItems.foods.food[0].food_name);
-                session.send(foodItems.foods.food[0].food_description);
-                //"Per 972g - Calories: 1225kcal | Fat: 33.44g | Carbs: 3.21g | Protein: 213.27g"
-                //we need to extract the calories from the description string
-                var foodCalories = parseInt(foodItems.foods.food[0].food_description.split('-')[1].split('|')[0].split(':')[1].replace("kcal",' '),10);
-                //create the food object and register it
-              }
-            })
-            //process each food with the api.
-            //session.send('That sounds delicious!');
-            //check how he's doing with the calories
-            //session.send('Your food journal has been updated, keep up the good work!');
-        })
-      ).then(() => {
-        if(!foundFood)
-        {
-          session.send('Sorry, I could not find information about these foods.');
-        }
-        next()
-      })
-    }
-
-    ]);
 
     //intent handler for checking if you can eat something
 dialog.matches('CouldIEat', [
@@ -173,8 +115,7 @@ dialog.matches('CouldIEat', [
     }
     ]);
 
-
-    dialog.matches('CheckCalories', [
+dialog.matches('CheckCalories', [
     function (session, args, next) {
         // console.log(_.filter(args.entities, entity => entity.type === 'Food'))
         session.send("Let me check your food journal.");
@@ -189,7 +130,5 @@ dialog.matches('CouldIEat', [
     }
     ]);
 
-// // TAKING USER INFORMATION BOT
-// //=========================================================
-bot.dialog('/user', userInfoDialogue);
-bot.dialog('/getId', getId);
+const getCalories = (foodItem) =>
+  parseInt(foodItem.match(/(\d+) ?kcal/)[1],10);
