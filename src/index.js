@@ -69,54 +69,9 @@ dialog.matches('AfricanOrEuropeanSwallow',[
   }]);
 
 //=========================================================
-// Bots Dialogs
-//=========================================================
-
-// bot.dialog('/', [
-//     function (session) {
-//         // ORIGINAL - session.beginDialog('/user', session.userData.profile);
-// 	session.beginDialog('/connection', session.userData.connectionProfile);
-//     },
-//     function (session, results, next) {
-//       session.send('You are logged as %s', results.firstName);
-//       session.send('So? What next?');
-//     }
-// ]);
-
-//=========================================================
 // CONNECTION BOT
 //=========================================================
-dialog.matches('Greetings', '/greetings')
-bot.dialog('/greetings',[
-
-  function (session, args, next) {
-		session.userData.user = args || {};
-    if (!session.userData.user.name) {
-      builder.Prompts.text(session, args.customPrompt || "Hey ! What's your name mate ?");
-    } else {
-      next();
-    }
-	},
-	function (session, results, next) {
-    if (results.response) {
-      session.userData.user.name = results.response;
-    }
-
-    const name = session.userData.user.name;
-    models.user.findOne({
-      where: {
-        firstName: name
-      }
-    }).then(resultsDb => {
-      if (resultsDb === null) {
-        session.beginDialog('/user', session.userData.profile);
-      } else {
-        session.send("Nice to meet you %s", resultsDb.firstName);
-        next(resultsDb);
-      }
-    })
-	}
-]);
+dialog.matches('Greetings','/getId');
 
 //=========================================================
 // Add intent handlers
@@ -237,3 +192,4 @@ dialog.matches('CouldIEat', [
 // // TAKING USER INFORMATION BOT
 // //=========================================================
 bot.dialog('/user', userInfoDialogue);
+bot.dialog('/getId', getId);
