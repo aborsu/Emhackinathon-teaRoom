@@ -21,7 +21,7 @@ const baseReqObj = () => {
     oauth_consumer_key: apiKey,
     oauth_nonce: Math.random().toString(36).replace(/[^a-z]/, '').substr(2),
     oauth_signature_method: 'HMAC-SHA1',
-    oauth_timestamp: Math.floor(date.getTime() / 1000),
+    oauth_timestamp: Math.floor(new Date().getTime() / 1000),
     oauth_version: '1.0'
   }
 };
