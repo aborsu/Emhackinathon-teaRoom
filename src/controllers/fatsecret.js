@@ -17,6 +17,7 @@ const date = new Date();
 const baseReqObj = () => {
   return {
     format: 'json',
+    method: 'foods.search',
     oauth_consumer_key: apiKey,
     oauth_nonce: Math.random().toString(36).replace(/[^a-z]/, '').substr(2),
     oauth_signature_method: 'HMAC-SHA1',
@@ -37,15 +38,7 @@ const buildSigBaseStr = request => {
 }
 
 const foodSearch = (expression) => new BPromise(resolve => {
-  const reqObj = {
-    format: 'json',
-    method: 'foods.search',
-    oauth_consumer_key: apiKey,
-    oauth_nonce: Math.random().toString(36).replace(/[^a-z]/, '').substr(2),
-    oauth_signature_method: 'HMAC-SHA1',
-    oauth_timestamp: Math.floor(date.getTime() / 1000),
-    oauth_version: '1.0'
-  };
+  const reqObj = baseReqObj();
   reqObj.search_expression = expression
   reqObj.oauth_signature = getOAuthSignature(reqObj);
 
@@ -66,4 +59,4 @@ const fatsecret = {
 module.exports = fatsecret;
 
 // example
-// fatsecret.food.search('hot dog')
+// fatsecret.food.search('hot dog').then(console.log)
