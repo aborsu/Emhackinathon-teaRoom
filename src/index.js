@@ -10,6 +10,7 @@ const getId = require('./dialogue/getId')
 const postFood = require('./dialogue/postFood')
 const meaningOfLife = require('./controllers/meaningOfLife');
 const eliza = require('./controllers/eliza');
+const getCaloryConsumption = require('./helpers/caloryConsumption.js').getCaloryConsumption;
 
 models.sequelize.sync()
   .then(() => console.log('DATABASE_SYNCED'))
@@ -102,30 +103,34 @@ dialog.matches('CouldIEat', [
        //process each of the food we receive and obtain the amount of calories.
        var totalMealCalories = 0;
       //  BPromise.all(
-       BPromise.mapSeries(foods, food => {
-         return fatsecret.food.search(food.entity)
-           .then( foodItems => {
-             //  session.send(JSON.stringify(foodItems))
-             if(foodItems.foods !== undefined)
-             {
-               session.send(foodItems.foods.food[0].food_name);
-               session.send(foodItems.foods.food[0].food_description);
-               //"Per 972g - Calories: 1225kcal | Fat: 33.44g | Carbs: 3.21g | Protein: 213.27g"
-               //we need to extract the calories from the description string
-               totalMealCalories = totalMealCalories + parseInt(foodItem.food_description.match(/(\d+) ?kcal/)[1],10);
-               //get available calories for the day (goal - calories eaten today)
-               const dayCalories =0; 
-               //check percentage of available calories that meal would take
-               const caloriesPercentage = dayCalories/totalMealCalories;
-               if(caloriesPercentage >=0.3)
-               {session.send("Woah! that's ".concat(totalMealCalories, " don't you think that's a little too much?"));}
-               else{
-                 session.send("it fits with your daily goals, go for it!");
-               }               
+      BPromise.mapSeries(foods, food => {
+        return fatsecret.food.search(food.entity)
+          .then( foodItems => {
+            if(foodItems.foods !== undefined)
+            {
+              session.send(foodItems.foods.food[0].food_name);
+              session.send(foodItems.foods.food[0].food_description);
+              //"Per 972g - Calories: 1225kcal | Fat: 33.44g | Carbs: 3.21g | Protein: 213.27g"
+              //we need to extract the calories from the description string
+              totalMealCalories += getCalories(foodItems.foods.food[0].food_description)
+              //get available calories for the day (goal - calories eaten today)
+              return getCaloryConsumption(session.userData.userId, new Date())
+                .then(dayCalories => {
+                  //check percentage of available calories that meal would take
+                  console.log(session.userData.userInstance)
+                  console.log(session.userData.userInstance.id)
+                  console.log(dayCalories)
+                  const caloriesPercentage = totalMealCalories/(session.userData.userInstance.goal - dayCalories);                  
+                  if(caloriesPercentage >=0.3 || caloriesPercentage<0)
+                  {session.send("Woah! that's ".concat(totalMealCalories, " don't you think that's a little too much for today?"));}
+                  else{
+                    session.send("it fits with your daily goals, go for it!");
+                  }
+                });
              }
            })
        }).then(() => {
-         session.send("come on ".concat(session.userData.user.name," that's " ,totalMealCalories.toString()," calories!"));
+         //session.send("come on ".concat(session.userData.name," that's " ,totalMealCalories.toString()," calories!"));
        })
 
     }
@@ -146,7 +151,10 @@ dialog.matches('CheckCalories', [
            responseString = "So far you have eaten: "
          }
          //call gus' function and show the user the information.
-         session.send(responseString.concat("123", ' calories!'));
+         getCaloryConsumption(session.userData.userId, userDate).then(total => {
+            session.send(responseString.concat(total.toString(), ' calories!'));
+         });
+         
 
        });
 

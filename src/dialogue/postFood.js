@@ -3,11 +3,11 @@ const BPromise = require('bluebird');
 const builder = require('botbuilder');
 const models = require('../models')
 const fatsecret = require('../controllers/fatsecret')
+const getCaloryConsumption = require('../helpers/caloryConsumption.js').getCaloryConsumption;
 
 module.exports = [
   (session, args, next) => {
     session.dialogData.foods = args;
-
     if (session.userData.userId === undefined) {
       session.dialogData.createUser = true;
       session.beginDialog('/getId', { customPrompt: "Wow hold it! I dont know you, please tell me your name."});
@@ -17,13 +17,16 @@ module.exports = [
     }
   },
   (session, args, next) => {
-    var entities = args.entities;
+    if (! session.dialogData.foods) {
+      console.log(session.dialogData.foods)
+      return session.endDialog();
+    }
+    var entities = session.dialogData.foods.entities;
 
     if (session.dialogData.createUser) {
       session.send("Now that this is out of the way, let's look at what you ate.")
-      entities = session.dialogData.foods.entities;
     }
-    var foods = _.filter(session.dialogData.foods.entities, entity => entity.type === 'Food');
+    var foods = _.filter(entities, entity => entity.type === 'Food');
     var foundFood = false;
     let totalCalories = 0;
     BPromise.mapSeries(foods, food => {
@@ -54,10 +57,24 @@ module.exports = [
         );
       } else {
         // TODO check goal and positive or negative message.
-        session.send('%d calories !! Isn\'t that a bit much?', totalCalories)
+        return getCaloryConsumption(session.userData.userId, new Date())
+                .then(dayCalories => {
+                  console.log(dayCalories)
+                  //check percentage of available calories that meal would take
+                  console.log(session.userData.userInstance)
+                  console.log(session.userData.userInstance.id)
+                  console.log(dayCalories)
+                  const caloriesPercentage = totalCalories/(session.userData.userInstance.goal - dayCalories);
+                  console.log(caloriesPercentage)            
+                  if(caloriesPercentage >=0.3 || caloriesPercentage < 0)
+                  {session.send(
+                    `Woah! you just ate ${totalCalories} and you have ${session.userData.userInstance.goal - dayCalories} left fo today. Don't you think that's a little too much?`);}
+                  else{
+                    session.send("Great meal, %s. Keep up the good work!", session.userData.name);
+                  }
+                });
+        
       }
-      session.endDialog();
-    })
-
+    }).then(() => session.endDialog())
   }
 ];

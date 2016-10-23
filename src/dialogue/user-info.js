@@ -23,7 +23,7 @@ module.exports = [
     }
   },
   function (session, results, next) {
-    if (results.response.entity) {
+    if (results.response) {
       session.dialogData.profile.gender = results.response.entity;
     }
     if (!session.dialogData.profile.age) {
@@ -73,8 +73,8 @@ module.exports = [
   },
   function (session, results, next) {
     if (results.response) {
-      session.dialogData.profile.goal = results.response.entity;
-    }
+      session.dialogData.profile.goal = results.response;
+   }
     //  CREATE THE INEXISTANT USER INFOS
     models.user.create({
       firstName: session.userData.name,
@@ -83,8 +83,8 @@ module.exports = [
       weight: session.dialogData.profile.weight,
       height: session.dialogData.profile.height,
       goal: session.dialogData.profile.goal
-    }).then( response => {
-      session.send('Thanks %s, I have now updated your profile.', session.userData.name)
+    }).then( response => { 
+      session.send('Thanks %s, I have now updated your profile. Please tell me what you ate', session.userData.name)
       session.userData.userId = response.id;
       session.userData.userInstance = response;
       session.endDialog();
