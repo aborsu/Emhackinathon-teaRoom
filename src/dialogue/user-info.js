@@ -13,7 +13,6 @@ module.exports = [
   function (session, args, results, next) {
     session.dialogData.profile = args || {};
     if (results.response && session.dialogData.profile.name) {
-      console.log(response)
       session.dialogData.profile.name = results.response;
     }
     if (!session.dialogData.profile.gender) {
