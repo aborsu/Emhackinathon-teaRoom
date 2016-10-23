@@ -84,12 +84,13 @@ bot.dialog('/', dialog);
 //=========================================================
 // CONNECTION BOT
 //=========================================================
-dialog.matches('Greetings',[
+dialog.matches('Greetings', '/greetings')
+bot.dialog('/greetings',[
 
   function (session, args, next) {
 		session.userData.user = args || {};
-    if (!session.userData.user.name) {
-      builder.Prompts.text(session, "Hey ! What's your name mate ?");
+    if (!session.userData.user.name) {      
+      builder.Prompts.text(session, args.customPrompt || "Hey ! What's your name mate ?");
     } else {
       next();
     }
@@ -108,7 +109,7 @@ dialog.matches('Greetings',[
       if (resultsDb === null) {
         session.beginDialog('/user', session.userData.profile);
       } else {
-        session.send("Tu existes ! %s", resultsDb.firstName);
+        session.send("Nice to meet you %s", resultsDb.firstName);
         next(resultsDb);
       }
     })
@@ -118,16 +119,36 @@ dialog.matches('Greetings',[
 //=========================================================
 // Add intent handlers
 
-dialog.matches('CheckCalories', builder.DialogAction.send('You want to get your calories for the day.'));
 dialog.onDefault(builder.DialogAction.send("Could you please rephrase what you just said?"));
 
 
 //intent handler for adding foods.
 dialog.matches('AddFoods', [
     function (session, args, next) {
+      session.dialogData.foods = args;
+      
+      if (session.userData.user === undefined)
+      {
+        session.dialogData.createUser = true;
+        session.beginDialog('/greetings', { customPrompt: "Wow hold it! I dont know you, please tell me your name."});
+        //break
+      }
+      else {
+        
+        session.dialogData.createUser = false;
+        next();
+      }
+    },
+    function (session, args, next) {
+      var entities =args.entities;
+      if (session.dialogData.createUser) {
+        session.send("Now that this is out of the way, let's look at what you ate.")
+        entities = session.dialogData.foods.entities;
+      }
+             
       // console.log(JSON.stringify(args));        
       // console.log(_.filter(args.compositeEntities, entity=>true))
-      var foods = _.filter(args.entities, entity => entity.type === 'Food');
+      var foods = _.filter(session.dialogData.foods.entities, entity => entity.type === 'Food');
       var foundFood = false;
       BPromise.all(
         BPromise.mapSeries(foods, food => {
@@ -159,9 +180,10 @@ dialog.matches('AddFoods', [
         next()
       })
     }
+    
     ]);
 
-    //intent handler for adding foods.
+    //intent handler for checking if you can eat something
 dialog.matches('CouldIEat', [
     function (session, args, next) {
         // console.log(_.filter(args.entities, entity => entity.type === 'Food'))
@@ -188,9 +210,25 @@ dialog.matches('CouldIEat', [
              }
            })
        }).then(() => {
-         session.send("That's ".concat(totalCalories.toString()," calories!"));
+         session.send("come on ".concat(session.userData.user.name," that's " ,totalCalories.toString()," calories!"));
        })
 
+    }
+    ]);
+
+
+    dialog.matches('CheckCalories', [
+    function (session, args, next) {
+        // console.log(_.filter(args.entities, entity => entity.type === 'Food'))    
+        session.send("Let me check your food journal.");   
+       var periods = _.filter(args.entities, entity => entity.type === 'builtin.datetime.date');
+       periods.forEach(function(period)
+       {
+         var date = new Date(period.resolution.date.toString());
+         
+       });
+       
+        
     }
     ]);
 
