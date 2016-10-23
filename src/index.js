@@ -100,7 +100,7 @@ dialog.matches('CouldIEat', [
          session.send('Sorry, Could you repeat that?');
        }
        //process each of the food we receive and obtain the amount of calories.
-       var totalCalories = 0;
+       var totalMealCalories = 0;
       //  BPromise.all(
        BPromise.mapSeries(foods, food => {
          return fatsecret.food.search(food.entity)
@@ -112,12 +112,20 @@ dialog.matches('CouldIEat', [
                session.send(foodItems.foods.food[0].food_description);
                //"Per 972g - Calories: 1225kcal | Fat: 33.44g | Carbs: 3.21g | Protein: 213.27g"
                //we need to extract the calories from the description string
-               totalCalories = totalCalories + parseInt(foodItems.foods.food[0].food_description.split('-')[1].split('|')[0].split(':')[1].replace("kcal",' '),10);
-               session.send(totalCalories.toString());
+               totalMealCalories = totalMealCalories + parseInt(foodItem.food_description.match(/(\d+) ?kcal/)[1],10);
+               //get available calories for the day (goal - calories eaten today)
+               const dayCalories =0; 
+               //check percentage of available calories that meal would take
+               const caloriesPercentage = dayCalories/totalMealCalories;
+               if(caloriesPercentage >=0.3)
+               {session.send("Woah! that's ".concat(totalMealCalories, " don't you think that's a little too much?"));}
+               else{
+                 session.send("it fits with your daily goals, go for it!");
+               }               
              }
            })
        }).then(() => {
-         session.send("come on ".concat(session.userData.user.name," that's " ,totalCalories.toString()," calories!"));
+         session.send("come on ".concat(session.userData.user.name," that's " ,totalMealCalories.toString()," calories!"));
        })
 
     }
@@ -130,7 +138,15 @@ dialog.matches('CheckCalories', [
        var periods = _.filter(args.entities, entity => entity.type === 'builtin.datetime.date');
        periods.forEach(function(period)
        {
-         var date = new Date(period.resolution.date.toString());
+         var userDate = new Date(period.resolution.date.toString());
+         var currentDate = new Date();
+         var responseString="That day you ate:";
+         if(userDate.getDay() == currentDate.getDay() && userDate.getMonth() == currentDate.getMonth())
+         {
+           responseString = "So far you have eaten: "
+         }
+         //call gus' function and show the user the information.
+         session.send(responseString.concat("123", ' calories!'));
 
        });
 
