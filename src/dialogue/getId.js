@@ -20,11 +20,9 @@ module.exports = [
     }
   },
   (session, args, next) => {
-    console.log(args)
     if (args.response) {
       session.userData.name = args.response
     }
-    console.log(session.userData.name)
 
     models.user.findOne({
       where: {
@@ -34,7 +32,6 @@ module.exports = [
       if (resultsDb === null) {
         session.beginDialog('/user');
       } else {
-        console.log(resultsDb.id)
         session.userData.userId = resultsDb.id;
         session.userData.userInstance = resultsDb;
         session.send("Oh! Yes I remember you now %s.", resultsDb.firstName);

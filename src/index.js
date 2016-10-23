@@ -44,6 +44,14 @@ meaningOfLife.create(bot);
 bot.beginDialogAction('Mounty Python', '/meaningOfLife', { matches: /^mounty python/i });
 
 server.post('/api/messages', connector.listen());
+bot.beginDialogAction('resetForDebug', '/debug', { matches: /^resetForDebug/i });
+bot.dialog('/debug', [
+  (session) => {
+    session.userData = {};
+    session.endDialog();
+  }
+]);
+
 
 var model = 'https://api.projectoxford.ai/luis/v1/application?' +
   `id=${config.luis.applicationID}&subscription-key=${config.luis.subscriptionKey}`;
