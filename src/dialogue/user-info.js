@@ -17,13 +17,14 @@ module.exports = [
       session.dialogData.profile.name = results.response;
     }
     if (!session.dialogData.profile.gender) {
+      session.send('hey there %s, it appears that we meet for the first time. Can you tell me a bit more about yourself?', session.userData.name)
       builder.Prompts.choice(session, "What is your gender (M/F) ?", ["M", "F"]);
     } else {
       next();
     }
   },
   function (session, results, next) {
-    if (results.response) {
+    if (results.response.entity) {
       session.dialogData.profile.gender = results.response.entity;
     }
     if (!session.dialogData.profile.age) {
@@ -77,15 +78,16 @@ module.exports = [
     }
     //  CREATE THE INEXISTANT USER INFOS
     models.user.create({
-      firstName: session.userData.user.name,
+      firstName: session.userData.name,
       gender: session.dialogData.profile.gender,
       age: session.dialogData.profile.age,
       weight: session.dialogData.profile.weight,
       height: session.dialogData.profile.height,
       goal: session.dialogData.profile.goal
-    }).then( response => next(response))
-  },
-  function (session, results) {
-    session.endDialogWithResult({response: results})
+    }).then( response => {
+      session.send('Thanks %s, I have now updated your profile.', session.userData.name)
+      session.userData.userId = response.id;
+      session.endDialog();
+    })
   }
 ]
