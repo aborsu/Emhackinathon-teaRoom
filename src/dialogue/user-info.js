@@ -87,6 +87,7 @@ module.exports = [
     }).then( response => {
       session.send('Thanks %s, I have now updated your profile.', session.userData.name)
       session.userData.userId = response.id;
+      session.userData.userInstance = response;
       session.endDialog();
     })
   }

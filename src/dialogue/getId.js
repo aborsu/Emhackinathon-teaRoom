@@ -36,6 +36,7 @@ module.exports = [
       } else {
         console.log(resultsDb.id)
         session.userData.userId = resultsDb.id;
+        session.userData.userInstance = resultsDb;
         session.send("Oh! Yes I remember you now %s.", resultsDb.firstName);
         next(resultsDb);
       }
