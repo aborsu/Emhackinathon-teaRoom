@@ -10,6 +10,7 @@ const getId = require('./dialogue/getId')
 const postFood = require('./dialogue/postFood')
 const meaningOfLife = require('./controllers/meaningOfLife');
 const eliza = require('./controllers/eliza');
+const getCaloryConsumption = require('./helpers/caloryConsumption.js').getCaloryConsumption;
 
 models.sequelize.sync()
   .then(() => console.log('DATABASE_SYNCED'))
@@ -100,24 +101,36 @@ dialog.matches('CouldIEat', [
          session.send('Sorry, Could you repeat that?');
        }
        //process each of the food we receive and obtain the amount of calories.
-       var totalCalories = 0;
+       var totalMealCalories = 0;
       //  BPromise.all(
-       BPromise.mapSeries(foods, food => {
-         return fatsecret.food.search(food.entity)
-           .then( foodItems => {
-             //  session.send(JSON.stringify(foodItems))
-             if(foodItems.foods !== undefined)
-             {
-               session.send(foodItems.foods.food[0].food_name);
-               session.send(foodItems.foods.food[0].food_description);
-               //"Per 972g - Calories: 1225kcal | Fat: 33.44g | Carbs: 3.21g | Protein: 213.27g"
-               //we need to extract the calories from the description string
-               totalCalories = totalCalories + parseInt(foodItems.foods.food[0].food_description.split('-')[1].split('|')[0].split(':')[1].replace("kcal",' '),10);
-               session.send(totalCalories.toString());
+      BPromise.mapSeries(foods, food => {
+        return fatsecret.food.search(food.entity)
+          .then( foodItems => {
+            if(foodItems.foods !== undefined)
+            {
+              session.send(foodItems.foods.food[0].food_name);
+              session.send(foodItems.foods.food[0].food_description);
+              //"Per 972g - Calories: 1225kcal | Fat: 33.44g | Carbs: 3.21g | Protein: 213.27g"
+              //we need to extract the calories from the description string
+              totalMealCalories += getCalories(foodItems.foods.food[0].food_description)
+              //get available calories for the day (goal - calories eaten today)
+              return getCaloryConsumption(session.userData.userId, new Date())
+                .then(dayCalories => {
+                  //check percentage of available calories that meal would take
+                  console.log(session.userData.userInstance)
+                  console.log(session.userData.userInstance.id)
+                  console.log(dayCalories)
+                  const caloriesPercentage = totalMealCalories/(session.userData.userInstance.goal - dayCalories);                  
+                  if(caloriesPercentage >=0.3 || caloriesPercentage<0)
+                  {session.send("Woah! that's ".concat(totalMealCalories, " don't you think that's a little too much for today?"));}
+                  else{
+                    session.send("it fits with your daily goals, go for it!");
+                  }
+                });
              }
            })
        }).then(() => {
-         session.send("come on ".concat(session.userData.user.name," that's " ,totalCalories.toString()," calories!"));
+         //session.send("come on ".concat(session.userData.name," that's " ,totalMealCalories.toString()," calories!"));
        })
 
     }
@@ -130,7 +143,18 @@ dialog.matches('CheckCalories', [
        var periods = _.filter(args.entities, entity => entity.type === 'builtin.datetime.date');
        periods.forEach(function(period)
        {
-         var date = new Date(period.resolution.date.toString());
+         var userDate = new Date(period.resolution.date.toString());
+         var currentDate = new Date();
+         var responseString="That day you ate:";
+         if(userDate.getDay() == currentDate.getDay() && userDate.getMonth() == currentDate.getMonth())
+         {
+           responseString = "So far you have eaten: "
+         }
+         //call gus' function and show the user the information.
+         getCaloryConsumption(session.userData.userId, userDate).then(total => {
+            session.send(responseString.concat(total.toString(), ' calories!'));
+         });
+         
 
        });
 
