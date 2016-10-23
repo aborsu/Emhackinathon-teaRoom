@@ -41,17 +41,9 @@ var bot = new builder.UniversalBot(connector);
 // Create prompts
 eliza.create(bot);
 bot.beginDialogAction('eliza', '/eliza', { matches: /^eliza/i });
-// dialog.matches('TalkToEliza',[
-//   (session) => {
-//     session.beginDialog('/eliza');
-//   }]);
 
 meaningOfLife.create(bot);
 bot.beginDialogAction('Mounty Python', '/meaningOfLife', { matches: /^mounty python/i });
-// dialog.matches('AfricanOrEuropeanSwallow',[
-//   (session) => {
-//     session.beginDialog('/meaningOfLife');
-//   }]);
 
 loadDatabase().then(() => {
   server.post('/api/messages', connector.listen());
@@ -65,6 +57,16 @@ var recognizer = new builder.LuisRecognizer(model);
 
 var dialog = new builder.IntentDialog({ recognizers: [recognizer] });
 bot.dialog('/', dialog);
+
+dialog.matches('TalkToEliza',[
+  (session) => {
+    session.beginDialog('/eliza');
+  }]);
+
+dialog.matches('AfricanOrEuropeanSwallow',[
+  (session) => {
+    session.beginDialog('/meaningOfLife');
+  }]);
 
 //=========================================================
 // Bots Dialogs
@@ -89,7 +91,7 @@ bot.dialog('/greetings',[
 
   function (session, args, next) {
 		session.userData.user = args || {};
-    if (!session.userData.user.name) {      
+    if (!session.userData.user.name) {
       builder.Prompts.text(session, args.customPrompt || "Hey ! What's your name mate ?");
     } else {
       next();
@@ -126,7 +128,7 @@ dialog.onDefault(builder.DialogAction.send("Could you please rephrase what you j
 dialog.matches('AddFoods', [
     function (session, args, next) {
       session.dialogData.foods = args;
-      
+
       if (session.userData.user === undefined)
       {
         session.dialogData.createUser = true;
@@ -134,7 +136,7 @@ dialog.matches('AddFoods', [
         //break
       }
       else {
-        
+
         session.dialogData.createUser = false;
         next();
       }
@@ -145,8 +147,8 @@ dialog.matches('AddFoods', [
         session.send("Now that this is out of the way, let's look at what you ate.")
         entities = session.dialogData.foods.entities;
       }
-             
-      // console.log(JSON.stringify(args));        
+
+      // console.log(JSON.stringify(args));
       // console.log(_.filter(args.compositeEntities, entity=>true))
       var foods = _.filter(session.dialogData.foods.entities, entity => entity.type === 'Food');
       var foundFood = false;
@@ -157,12 +159,12 @@ dialog.matches('AddFoods', [
               //  session.send(JSON.stringify(foodItems))
               if(foodItems.foods !== undefined && foodItems.foods.food !== undefined)
               {
-                foundFood=true;       
-                        
+                foundFood=true;
+
                 session.send(foodItems.foods.food[0].food_name);
-                session.send(foodItems.foods.food[0].food_description);                
+                session.send(foodItems.foods.food[0].food_description);
                 //"Per 972g - Calories: 1225kcal | Fat: 33.44g | Carbs: 3.21g | Protein: 213.27g"
-                //we need to extract the calories from the description string               
+                //we need to extract the calories from the description string
                 var foodCalories = parseInt(foodItems.foods.food[0].food_description.split('-')[1].split('|')[0].split(':')[1].replace("kcal",' '),10);
                 //create the food object and register it
               }
@@ -174,13 +176,13 @@ dialog.matches('AddFoods', [
         })
       ).then(() => {
         if(!foundFood)
-        {          
+        {
           session.send('Sorry, I could not find information about these foods.');
         }
         next()
       })
     }
-    
+
     ]);
 
     //intent handler for checking if you can eat something
@@ -190,7 +192,7 @@ dialog.matches('CouldIEat', [
        var foods = _.filter(args.entities, entity => entity.type === 'Food');
        if(foods.length==0)
        {
-         session.send('Sorry, Could you repeat that?'); 
+         session.send('Sorry, Could you repeat that?');
        }
        //process each of the food we receive and obtain the amount of calories.
        var totalCalories = 0;
@@ -202,9 +204,9 @@ dialog.matches('CouldIEat', [
              if(foodItems.foods !== undefined)
              {
                session.send(foodItems.foods.food[0].food_name);
-               session.send(foodItems.foods.food[0].food_description);               
+               session.send(foodItems.foods.food[0].food_description);
                //"Per 972g - Calories: 1225kcal | Fat: 33.44g | Carbs: 3.21g | Protein: 213.27g"
-               //we need to extract the calories from the description string               
+               //we need to extract the calories from the description string
                totalCalories = totalCalories + parseInt(foodItems.foods.food[0].food_description.split('-')[1].split('|')[0].split(':')[1].replace("kcal",' '),10);
                session.send(totalCalories.toString());
              }
@@ -219,16 +221,16 @@ dialog.matches('CouldIEat', [
 
     dialog.matches('CheckCalories', [
     function (session, args, next) {
-        // console.log(_.filter(args.entities, entity => entity.type === 'Food'))    
-        session.send("Let me check your food journal.");   
+        // console.log(_.filter(args.entities, entity => entity.type === 'Food'))
+        session.send("Let me check your food journal.");
        var periods = _.filter(args.entities, entity => entity.type === 'builtin.datetime.date');
        periods.forEach(function(period)
        {
          var date = new Date(period.resolution.date.toString());
-         
+
        });
-       
-        
+
+
     }
     ]);
 
