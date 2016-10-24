@@ -4,7 +4,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       field: 'name'
     },
-     fatSecretId: {
+    fatSecretId: {
       type: DataTypes.STRING,
       field: 'fatSecretId'
     },
@@ -18,11 +18,11 @@ module.exports = (sequelize, DataTypes) => {
 
   }, {
     classMethods: {
-      associate: function(models) {
-        Food.belongsTo(models.user);
+      associate: function (models) {
+        Food.belongsTo(models.user)
       }
     },
     freezeTableName: true // Model tableName will be the same as the model name
-  });
-  return Food;
-};
+  })
+  return Food
+}

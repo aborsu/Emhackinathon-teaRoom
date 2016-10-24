@@ -4,37 +4,37 @@ called once at startup and then beginDialog() can be called everytime you
 wish to invoke the prompt.
 -----------------------------------------------------------------------------*/
 
-var builder = require('botbuilder');
+var builder = require('botbuilder')
 
 exports.beginDialog = function (session, options) {
-    session.beginDialog('/meaningOfLife', options || {});
+  session.beginDialog('/meaningOfLife', options || {})
 }
 
 exports.create = function (bot) {
-    var prompt = new builder.IntentDialog()
-        .onBegin(function (session, args) {
-            // Save args passed to prompt
-            session.dialogData.retryPrompt = args.retryPrompt || "Sorry that's incorrect. Guess again. Or do you give up?";
+  var prompt = new builder.IntentDialog()
+    .onBegin(function (session, args) {
+      // Save args passed to prompt
+      session.dialogData.retryPrompt = args.retryPrompt || "Sorry that's incorrect. Guess again. Or do you give up?"
 
-            // Send initial prompt
-            // - This isn't a waterfall so you shouldn't call any of the built-in Prompts.
-            session.send(args.prompt || "What's the meaning of life?");
-        })
-        .matches(/(give up|quit|skip|yes)/i, function (session) {
-            // Return 'false' to indicate they gave up
-            session.send("Sorry you couldn't figure it out. Everyone knows that the meaning of life is 42.");
-            session.endDialogWithResult({ response: false });
-        })
-        .onDefault(function (session) {
-            // Validate users reply.
-            if (session.message.text == '42') {
-                // Return 'true' to indicate success
-                session.send("That's correct! You are wise beyond your years...");
-                session.endDialogWithResult({ response: true });
-            } else {
-                // Re-prompt user
-                session.send(session.dialogData.retryPrompt);
-            }
-        });
-    bot.dialog('/meaningOfLife', prompt);
+      // Send initial prompt
+      // - This isn't a waterfall so you shouldn't call any of the built-in Prompts.
+      session.send(args.prompt || "What's the meaning of life?")
+    })
+    .matches(/(give up|quit|skip|yes)/i, function (session) {
+      // Return 'false' to indicate they gave up
+      session.send("Sorry you couldn't figure it out. Everyone knows that the meaning of life is 42.")
+      session.endDialogWithResult({ response: false })
+    })
+    .onDefault(function (session) {
+      // Validate users reply.
+      if (session.message.text == '42') {
+        // Return 'true' to indicate success
+        session.send("That's correct! You are wise beyond your years...")
+        session.endDialogWithResult({ response: true })
+      } else {
+        // Re-prompt user
+        session.send(session.dialogData.retryPrompt)
+      }
+    })
+  bot.dialog('/meaningOfLife', prompt)
 }

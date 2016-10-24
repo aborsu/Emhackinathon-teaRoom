@@ -1,4 +1,4 @@
-const builder = require('botbuilder');
+const builder = require('botbuilder')
 const models = require('../models')
 
 module.exports = [
@@ -14,7 +14,7 @@ module.exports = [
     if (!session.userData.name) {
       builder.Prompts.text(
         session,
-        args.customPrompt || "Hey ! What's your name mate ?");
+        args.customPrompt || "Hey ! What's your name mate ?")
     } else {
       next()
     }
@@ -30,12 +30,12 @@ module.exports = [
       }
     }).then(resultsDb => {
       if (resultsDb === null) {
-        session.beginDialog('/user');
+        session.beginDialog('/user')
       } else {
-        session.userData.userId = resultsDb.id;
-        session.userData.userInstance = resultsDb;
-        session.send("Oh! Yes I remember you now %s.", resultsDb.firstName);
-        next(resultsDb);
+        session.userData.userId = resultsDb.id
+        session.userData.userInstance = resultsDb
+        session.send('Oh! Yes I remember you now %s.', resultsDb.firstName)
+        next(resultsDb)
       }
     })
   }
